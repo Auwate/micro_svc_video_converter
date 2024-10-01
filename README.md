@@ -41,6 +41,21 @@ CREATE TABLE USER (
 
 # Versions
 
+## v0.2
+
+Date 10/01/24
+Changes:
+
+- Added gateway directory
+  - Added server.py
+  - Added Dockerfile
+  - Added subdirectories
+  - Fixed connectivity issues regarding auth pods
+- Fixed auth directory
+  - Fixed issues regarding Flask and connections
+- Added rabbitmq directory
+  - Created outline for manifests
+
 ## v0.1
 
 Date: 09/30/24
