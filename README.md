@@ -20,23 +20,70 @@ Technology used include:
 
 Please start Kubernetes (or minikube) and apply the manifest files
 
+## Applying Ingress
+
+This application uses a loopback address to allow communication with the Kubernetes cluster. To add a custom loopback address, you can do edit `hosts` on either Debian or Windows
+
+### Debian
+
+```
+sudo vim /etc/hosts
+
+# Add something like "127.0.0.1 mp3converter.com" or "127.0.0.1 myApp.com"
+```
+
+### Windows
+
+```
+# Open notepad as adminstrator
+# Click open file and go to C:\Windows\System32\drivers\etc\ and open "hosts"
+
+# Add something like "127.0.0.1 <YOUR_CUSTOM_LOOPBACK>"
+```
+
 ## MySQL setup
 
 This repository has not yet included the init.sql file as a Volume, so you will need to apply the database, table, and authorized user.
 
+To do this, please run:
+
+```
+kubectl get pods
+
+# Find the MySQL pod
+
+kubectl exec -it <MySQL_POD_ID> -- bash
+./usr/bin/mysql -u root -p
+
+# Enter admin password. If you haven't changed it, it will be "adminpass"
+```
+
+Then copy and paste this init.sql file:
+
 ```
 CREATE DATABASE auth;
 
-CREATE USER 'auth_user'@'localhost' IDENTIFIED BY 'Aauth123';
-GRANT ALL PRIVILEGES ON auth.* TO 'auth_user'@'localhost';
+CREATE USER 'auth_user'@'%' IDENTIFIED BY 'Aauth123';
+GRANT ALL PRIVILEGES ON auth.* TO 'auth_user'@'%';
 
 USE auth;
 
-CREATE TABLE USER (
+CREATE TABLE user (
     id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL
 );
+
+INSERT INTO user (email, password)
+VALUES ('test@gmail.com', 'Admin123');
+```
+
+## Testing the application
+
+Currently, testing involves using `cURL` and using the POST utility. Here's an example:
+
+```
+curl.exe -X POST http://<YOUR_CUSTOM_LOOPBACK>/login -u auwate1@gmail.com:Admin123
 ```
 
 # Versions
