@@ -2,8 +2,7 @@ FROM python:3.12.6-slim-bookworm
 
 RUN apt-get update \
     && apt-get upgrade -y \
-    && apt-get install -y --no-install-recommends --no-install-suggests \
-    build-essential libmariadb-dev pkg-config \
+    && apt-get install -y --no-install-recommends --no-install-suggests build-essential \
     && python3 -m pip install --no-cache-dir --upgrade pip
 
 COPY . /home/program/app
@@ -13,6 +12,6 @@ RUN chmod +r requirements.txt
 
 RUN python3 -m pip install --no-cache-dir --requirement requirements.txt
 
-EXPOSE 5000
+EXPOSE 8080
 
 CMD [ "python3", "server.py" ]

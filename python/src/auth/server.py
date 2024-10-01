@@ -6,15 +6,16 @@ from flask_mysqldb import MySQL
 from MySQLdb.cursors import Cursor
 
 server = Flask(__name__)
-mysql = MySQL(server)
 
 server.config["MYSQL_HOST"] = os.environ.get("MYSQL_HOST")
 server.config["MYSQL_USER"] = os.environ.get("MYSQL_USER")
 server.config["MYSQL_PASSWORD"] = os.environ.get("MYSQL_PASSWORD")
 server.config["MYSQL_DB"] = os.environ.get("MYSQL_DB")
-server.config["MYSQL_PORT"] = os.environ.get("MYSQL_PORT")
+server.config["MYSQL_PORT"] = int(os.environ.get("MYSQL_PORT"))
 
-server.route("/login", methods=["POST"])
+mysql = MySQL(server)
+
+@server.route("/login", methods=["POST"])
 def login():
     auth = request.authorization
 
@@ -24,9 +25,9 @@ def login():
     cursor: Cursor = mysql.connection.cursor()
 
     result = cursor.execute(
-        "SELECT email, password" \
-        "FROM user" \
-        f"WHERE email={auth.username}"
+        "SELECT email, password " \
+        "FROM user " \
+        "WHERE email=%s", (auth.username,)
     )
 
     if result > 0:
@@ -72,11 +73,16 @@ def validate():
             os.environ["JWT_SECRET"],
             algorithms=["HS256"]
         )
-    except Exception:
+    except Exception as exc:
+        print(exc)
         return "Not authorized", 403
 
     return decoded, 200
 
 if __name__ == "__main__":
-    print(__name__)
+    print("Host:", server.config["MYSQL_HOST"])
+    print("User:", server.config["MYSQL_USER"])
+    print("Password:", server.config["MYSQL_PASSWORD"])
+    print("DB:", server.config["MYSQL_DB"])
+    print("Port:", server.config["MYSQL_PORT"])
     server.run(host="0.0.0.0", port=5000)
