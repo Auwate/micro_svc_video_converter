@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: config-map
+  name: mongo-config
 data:
   mongod.conf: |
     replication:
