@@ -41,41 +41,14 @@ sudo vim /etc/hosts
 # Add something like "127.0.0.1 <YOUR_CUSTOM_LOOPBACK>"
 ```
 
-## MySQL setup
+## MongoDB ReplicaSet Setup
 
-This repository has not yet included the init.sql file as a Volume, so you will need to apply the database, table, and authorized user.
+The project contributor is researching into automated replica sets, but for now it must be done manually.
 
 To do this, please run:
 
 ```
-kubectl get pods
-
-# Find the MySQL pod
-
-kubectl exec -it <MySQL_POD_ID> -- bash
-./usr/bin/mysql -u root -p
-
-# Enter admin password. If you haven't changed it, it will be "adminpass"
-```
-
-Then copy and paste this init.sql file:
-
-```
-CREATE DATABASE auth;
-
-CREATE USER 'auth_user'@'%' IDENTIFIED BY 'Aauth123';
-GRANT ALL PRIVILEGES ON auth.* TO 'auth_user'@'%';
-
-USE auth;
-
-CREATE TABLE user (
-    id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL
-);
-
-INSERT INTO user (email, password)
-VALUES ('test@gmail.com', 'Admin123');
+kubectl exec -it mongo -- --eval 'rs.initiate({_id: "rs0", members: [{ _id: 0, host: "auth-mongo-db-0.auth-mongo-service:27017" }, { _id: 1, host: "auth-mongo-db-1.auth-mongo-service:27017" }]});'
 ```
 
 ## Testing the application
