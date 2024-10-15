@@ -2,46 +2,62 @@ import datetime
 import os
 import jwt
 from flask import Flask, request
-from flask_mysqldb import MySQL
-from MySQLdb.cursors import Cursor
+from sqlalchemy import create_engine
+from sqlalchemy.sql import text
 
 server = Flask(__name__)
+#master_db = create_engine(f"mysql+pymysql://{os.environ.get("MYSQL_USER")}:{os.environ.get("MYSQL_PASSWORD")}@{os.environ.get("MYSQL_MASTER_DB")}:{os.environ.get("MYSQL_PORT")}/{os.environ.get("MYSQL_DB")}")
+replica_db = create_engine(f"mysql+pymysql://{os.environ.get("MYSQL_USER")}:{os.environ.get("MYSQL_PASSWORD")}@{os.environ.get("MYSQL_REPLICA_DB")}:{os.environ.get("MYSQL_PORT")}/{os.environ.get("MYSQL_DB")}")
+JWT_SECRET = os.environ.get("JWT_SECRET")
 
-server.config["MYSQL_HOST"] = os.environ.get("MYSQL_HOST")
-server.config["MYSQL_USER"] = os.environ.get("MYSQL_USER")
-server.config["MYSQL_PASSWORD"] = os.environ.get("MYSQL_PASSWORD")
-server.config["MYSQL_DB"] = os.environ.get("MYSQL_DB")
-server.config["MYSQL_PORT"] = int(os.environ.get("MYSQL_PORT"))
+# server.config["MYSQL_HOST"] = os.environ.get("MYSQL_HOST")
+# server.config["MYSQL_USER"] = os.environ.get("MYSQL_USER")
+# server.config["MYSQL_PASSWORD"] = os.environ.get("MYSQL_PASSWORD")
+# server.config["MYSQL_DB"] = os.environ.get("MYSQL_DB")
+# server.config["MYSQL_PORT"] = int(os.environ.get("MYSQL_PORT"))
 
-mysql = MySQL(server)
+# mysql = MySQL(server)
 
 @server.route("/login", methods=["POST"])
 def login():
     auth = request.authorization
 
     if not auth:
-        return "Missing credentials", 401
+        return {"response": "missing credentials"}, 401
 
-    cursor: Cursor = mysql.connection.cursor()
+    with replica_db.connect() as connection:
 
-    result = cursor.execute(
-        "SELECT email, password " \
-        "FROM user " \
-        "WHERE email=%s", (auth.username,)
-    )
+        command = text(
+            "SELECT email, password "
+            "FROM user "
+            "WHERE email=:param1"
+        )
 
-    if result > 0:
-        user_row: list = cursor.fetchone()
-        email: str = user_row[0]
-        password: str = user_row[1]
+        result = connection.execute(
+            command,
+            {"param1": auth.username}
+        )
 
-        if auth.username != email or auth.password != password:
-            return "invalid credentials", 401
-        else:
-            return createJWT(auth.username, os.environ.get("JWT_SECRET"), True)
+        row = result.fetchone()
 
-    else:
-        return "Invalid credentials", 401
+        if row:
+            email: str = row[0]
+            password: str = row[1]
+
+            if email != auth.username or password != auth.password:
+                return {"response": "invalid credentials"}, 401
+
+            return {"response": createJWT(email, JWT_SECRET, True)}, 200
+
+        return {"response": "invalid credentials"}, 401
+
+    #cursor: Cursor = mysql.connection.cursor()
+
+    # result = cursor.execute(
+    #     "SELECT email, password " \
+    #     "FROM user " \
+    #     "WHERE email=%s", (auth.username,)
+    # )
 
 def createJWT(username: str, secret: str, isAdmin: bool):
     return jwt.encode(
@@ -55,17 +71,16 @@ def createJWT(username: str, secret: str, isAdmin: bool):
         secret,
         algorithm="HS256",
     )
-
+import sys
 @server.route("/validate", methods=["POST"])
 def validate():
+
     encoded_jwt = request.headers["Authorization"]
 
     if not encoded_jwt:
-        return "Missing credentials", 401
+        return {"response": "missing credentials"}, 401
 
     encoded_jwt = encoded_jwt.split(" ")
-
-    print(encoded_jwt[0])
 
     try:
         decoded = jwt.decode(
@@ -73,16 +88,10 @@ def validate():
             os.environ["JWT_SECRET"],
             algorithms=["HS256"]
         )
-    except Exception as exc:
-        print(exc)
-        return "Not authorized", 403
+    except Exception:
+        return {"response": "not authorized"}, 403
 
-    return decoded, 200
+    return {"response": decoded}, 200
 
 if __name__ == "__main__":
-    print("Host:", server.config["MYSQL_HOST"])
-    print("User:", server.config["MYSQL_USER"])
-    print("Password:", server.config["MYSQL_PASSWORD"])
-    print("DB:", server.config["MYSQL_DB"])
-    print("Port:", server.config["MYSQL_PORT"])
     server.run(host="0.0.0.0", port=5000)

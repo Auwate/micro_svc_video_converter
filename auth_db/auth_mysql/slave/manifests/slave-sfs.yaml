@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: auth-slave-sfs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-slave
+  template:
+    metadata:
+      labels:
+        app: auth-slave
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:5.7
+        args: ["--init-file=/etc/init.sql"]
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: auth-mysql-secret
+              key: MYSQL_ROOT_PASSWORD
+        volumeMounts:
+        - name: config-map
+          mountPath: /etc/my.cnf
+          subPath: my.cnf
+        - name: config-map
+          mountPath: /etc/init.sql
+          subPath: init.sql
+        - name: auth-mysql-slave-data-volume
+          mountPath: /var/lib/mysql
+        - name: auth-mysql-slave-log-volume
+          mountPath: /var/log/mysql
+      volumes:
+      - name: config-map
+        configMap:
+          name: auth-mysql-slave-config
+  volumeClaimTemplates:
+  - metadata:
+      name: auth-mysql-slave-data-volume
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi
+  - metadata:
+      name: auth-mysql-slave-log-volume
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi

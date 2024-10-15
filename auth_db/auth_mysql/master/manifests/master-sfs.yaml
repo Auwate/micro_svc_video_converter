@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: auth-master-sfs
+spec:
+  serviceName: auth-master-headless-service
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-master
+  template:
+    metadata:
+      labels:
+        app: auth-master
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:5.7
+        args: ["--init-file=/etc/init.sql"]
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: auth-mysql-secret
+              key: MYSQL_ROOT_PASSWORD
+        volumeMounts:
+        - name: config-map
+          mountPath: /etc/init.sql
+          subPath: init.sql
+        - name: config-map
+          mountPath: /etc/my.cnf
+          subPath: my.cnf
+        - name: auth-mysql-data-volume
+          mountPath: /var/lib/mysql
+        - name: auth-mysql-log-volume
+          mountPath: /var/log/mysql
+      volumes:
+      - name: config-map
+        configMap:
+          name: auth-mysql-config
+  volumeClaimTemplates:
+  - metadata:
+      name: auth-mysql-data-volume
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi
+  - metadata:
+      name: auth-mysql-log-volume
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 10Gi

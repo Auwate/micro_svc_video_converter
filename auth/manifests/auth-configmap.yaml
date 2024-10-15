@@ -5,5 +5,7 @@ metadata:
 data:
   MYSQL_HOST: mysql-service
   MYSQL_USER: auth_user
-  MYSQL_DB: auth
+  MYSQL_DB: authdb
   MYSQL_PORT: "3306"
+  MYSQL_REPLICA_DB: auth-slave-service
+  MYSQL_MASTER_DB: auth-master-sfs-0.auth-master-headless-service

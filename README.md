@@ -16,6 +16,12 @@ Technology used include:
 
 # Directions
 
+All console commands will start with "$"
+
+*IMPORTANT*
+
+If you are using Windows, use `curl.exe` for all cURL commands.
+
 ## Kubernetes setup
 
 Please start Kubernetes (or minikube) and apply the manifest files
@@ -27,7 +33,7 @@ This application uses a loopback address to allow communication with the Kuberne
 ### Debian
 
 ```
-sudo vim /etc/hosts
+$ sudo vim /etc/hosts
 
 # Add something like "127.0.0.1 mp3converter.com" or "127.0.0.1 myApp.com"
 ```
@@ -41,27 +47,68 @@ sudo vim /etc/hosts
 # Add something like "127.0.0.1 <YOUR_CUSTOM_LOOPBACK>"
 ```
 
-## MongoDB ReplicaSet Setup
+## MySQL Setup
 
-The project contributor is researching into automated replica sets, but for now it must be done manually.
+The project contributor decided to use a relational database for ease-of-use and ACID compliance, using a master-slave setup to provide limited scalability. Currently the setup is limited to 2 nodes as the slave MySQL instance is not automated yet.
 
-To do this, please run:
+To do this, please apply the manifest and run:
 
 ```
-kubectl exec -it mongo -- --eval 'rs.initiate({_id: "rs0", members: [{ _id: 0, host: "auth-mongo-db-0.auth-mongo-service:27017" }, { _id: 1, host: "auth-mongo-db-1.auth-mongo-service:27017" }]});'
+$ kubectl exec -it auth-master-sfs-0 -- mysql -u root -p
+# Enter admin password
+
+$ SHOW MASTER STATUS;
+# Copy the name of the bin log. It should be something like mysql-bin.000001
+# Copy the position of the bin log's latest entry. It should be something like 1740
+exit
+
+$ kubectl exec -it auth-slave-sfs-0 -- mysql -u root -p
+# Enter admin password
+
+$ CHANGE MASTER TO 
+    MASTER_HOST='auth-master-sfs-0.auth-master-headless-service', 
+    MASTER_USER='replica_user', 
+    MASTER_PASSWORD='replica_password', 
+    MASTER_LOG_FILE='<ENTER BIN LOG NAME HERE>', # Enter bin_log_name here with quotes
+    MASTER_LOG_POS=<ENTER BIN LOG POSITION>; # Enter bin_log_pos here with no quotes
+
+$ START SLAVE;
+# The slave DB will not start without this command
 ```
 
 ## Testing the application
 
-Currently, testing involves using `cURL` and using the POST utility. Here's an example:
+Currently, testing involves using `cURL` and using the POST utility. To install, you can use:
+
+`apt install curl` if you are on a Linux distro
+`choco install curl` if you are on Windows
+
+This command will send a message to the `auth` application, returning a JWT
 
 ```
-curl.exe -X POST http://<YOUR_CUSTOM_LOOPBACK>/login -u auwate1@gmail.com:Admin123
+curl -X POST http://<YOUR_CUSTOM_LOOPBACK>/login -u test@gmail.com:Admin123
+```
+
+This command will return a 400 response, but it will interface with `/validate`
+
+```
+curl -X POST http//<YOUR_CUSTOM_LOOPBACK>/upload -H "Authorization: Bearer <PUT_JWT_HERE>"
 ```
 
 # Versions
 
 ## v0.2
+
+Date 10/15/24
+Changes:
+
+- Changed to MySQL replicaset
+  - Added master node
+  - Added replica node
+    - Replica nodes can be scaled out infinitely if needed, as it is part of a ClusterIP Service
+- Added HTTP status codes to Flask responses
+- Fixed connectivity issues from gateway API to auth pods
+- Changed responses to be in JSON format
 
 Date 10/01/24
 Changes:

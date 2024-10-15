@@ -22,19 +22,22 @@ def login():
     token, err = access.login(request)
 
     if not err:
-        return token
-    else:
-        return err
+        return {"response": token}, 200
+
+    return {"response": err[0]}, err[1]
 
 @server.route("/upload", methods=["POST"])
 def upload():
-    access, err = validate.token(request)
+    result, err = validate.token(request)
 
-    access = json.loads(access)
+    if err:
+        return err
+
+    access = result["response"]
 
     if access["admin"]:
-        if len(request.files) > 1 or len(request.files < 1):
-            return "Exactly 1 file required.", 400
+        if len(request.files) > 1 or len(request.files) < 1:
+            return {"response":"Exactly 1 file required."}, 400
 
         for _, f in request.files.items():
             err = util.upload(f, fs, channel, access)
@@ -42,9 +45,9 @@ def upload():
             if err:
                 return err
 
-        return "Success", 200
-    else:
-        return "Not authorized"
+        return {"response": "success"}, 200
+
+    return {"response": "Not authorized"}, 401
 
 @server.route("/download", methods=["GET"])
 def download():
