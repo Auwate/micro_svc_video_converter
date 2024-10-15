@@ -97,7 +97,7 @@ curl -X POST http//<YOUR_CUSTOM_LOOPBACK>/upload -H "Authorization: Bearer <PUT_
 
 # Versions
 
-## v0.2
+## v0.3
 
 Date 10/15/24
 Changes:
@@ -109,6 +109,8 @@ Changes:
 - Added HTTP status codes to Flask responses
 - Fixed connectivity issues from gateway API to auth pods
 - Changed responses to be in JSON format
+
+## v0.2
 
 Date 10/01/24
 Changes:
