@@ -9,3 +9,5 @@ data:
   MYSQL_PORT: "3306"
   MYSQL_REPLICA_DB: auth-slave-service
   MYSQL_MASTER_DB: auth-master-sfs-0.auth-master-headless-service
+  REDIS_HOST: auth-redis-service
+  REDIS_PORT: "6379"

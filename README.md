@@ -97,6 +97,19 @@ curl -X POST http//<YOUR_CUSTOM_LOOPBACK>/upload -H "Authorization: Bearer <PUT_
 
 # Versions
 
+## v0.4
+
+Date 11/06/24
+Changes:
+
+- Added `accessed` to database tables
+  - A `DATETIME` object that references the last time the user interacted with the API
+- Added new `admin/recent` API to see who has accessed the API recently
+- Added Redis
+  - Because `admin/recent` is a computationally expensive operation, it is better for cache the data on Redis and pull from there whenever possible
+- Fixed `auth_user` on both master and slave from not being able to interact with databases
+- Changed logic on `auth/server.py` to reference Redis and update the master database.
+
 ## v0.3
 
 Date 10/15/24

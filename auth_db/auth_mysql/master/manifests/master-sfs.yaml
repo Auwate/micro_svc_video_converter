@@ -25,6 +25,10 @@ spec:
             secretKeyRef:
               name: auth-mysql-secret
               key: MYSQL_ROOT_PASSWORD
+        # lifecycle:
+        #   postStart:
+        #     exec:
+        #       command: ["/etc/setup.sh"]
         volumeMounts:
         - name: config-map
           mountPath: /etc/init.sql
@@ -32,6 +36,12 @@ spec:
         - name: config-map
           mountPath: /etc/my.cnf
           subPath: my.cnf
+        - name: config-map
+          mountPath: /etc/setup.sh
+          subPath: setup.sh
+        - name: config-map
+          mountPath: /etc/setup.sql
+          subPath: setup.sql
         - name: auth-mysql-data-volume
           mountPath: /var/lib/mysql
         - name: auth-mysql-log-volume

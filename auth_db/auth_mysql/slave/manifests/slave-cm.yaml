@@ -21,15 +21,18 @@ data:
     CREATE DATABASE IF NOT EXISTS authdb;
     USE authdb;
 
+    DROP USER IF EXISTS 'auth_user'@'%';
+
     CREATE USER IF NOT EXISTS 'auth_user'@'%' IDENTIFIED BY 'Aauth123';
+    GRANT SUPER ON *.* TO 'auth_user'@'%';
     GRANT ALL PRIVILEGES ON authdb.* TO 'auth_user'@'%';
 
     FLUSH PRIVILEGES;
 
     CREATE TABLE IF NOT EXISTS user (
-        id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        email VARCHAR(255) NOT NULL UNIQUE,
-        password VARCHAR(255) NOT NULL
+        email VARCHAR(255) NOT NULL UNIQUE PRIMARY KEY,
+        password VARCHAR(255) NOT NULL,
+        accessed DATETIME DEFAULT NOW()
     );
 
     INSERT INTO user (email, password)

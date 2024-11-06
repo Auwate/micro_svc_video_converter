@@ -22,7 +22,10 @@ data:
     CREATE DATABASE IF NOT EXISTS authdb;
     USE authdb;
 
+    DROP USER IF EXISTS 'auth_user'@'%', 'replica_user'@'%';
+
     CREATE USER IF NOT EXISTS 'auth_user'@'%' IDENTIFIED BY 'Aauth123';
+    GRANT SUPER ON *.* TO 'auth_user'@'%';
     GRANT ALL PRIVILEGES ON authdb.* TO 'auth_user'@'%';
 
     CREATE USER IF NOT EXISTS 'replica_user'@'%' IDENTIFIED BY 'replica_password';
@@ -31,13 +34,53 @@ data:
     FLUSH PRIVILEGES;
 
     CREATE TABLE IF NOT EXISTS user (
-        id INT NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        email VARCHAR(255) NOT NULL UNIQUE,
-        password VARCHAR(255) NOT NULL
+        email VARCHAR(255) NOT NULL UNIQUE PRIMARY KEY,
+        password VARCHAR(255) NOT NULL,
+        accessed DATETIME DEFAULT NOW()
     );
 
     INSERT INTO user (email, password)
     VALUES ('test@gmail.com', 'Admin123')
     ON DUPLICATE KEY UPDATE email=email;
+
+    COMMIT;
+
+  setup.sh: |
+    #!/bin/bash
+    sleep 40
+
+    mysql -u root -padminpass < /etc/setup.sql
+
+  setup.sql: |
+    START TRANSACTION;
+
+    USE authdb;
+
+    DROP PROCEDURE IF EXISTS insert_example_rows;
+
+    DELIMITER $$
+
+    CREATE PROCEDURE insert_example_rows()
+
+    BEGIN
+
+      DECLARE i INT DEFAULT 0;
+
+      WHILE i < 1000 DO
+
+        INSERT INTO user (email, password)
+        VALUES (
+          CONCAT('user', i, "@email.com"),
+          "TEMP_PASS"
+        );
+        SET i = i + 1;
+
+      END WHILE;
+
+    END $$
+
+    DELIMITER ;
+
+    CALL insert_example_rows();
 
     COMMIT;
