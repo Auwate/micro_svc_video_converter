@@ -1,0 +1,48 @@
+- name: Set up application infrastructure on Minikube
+  hosts: localhost
+  tasks:
+    - name: Start Minikube
+      shell: minikube start
+
+    - name: Checking environment variables
+      command: minikube ip
+      register: K8S_IP_ADDR
+
+    - name: Apply Kubernetes configurations
+      shell: minikube kubectl -- apply -f {{ item }}
+      with_items:
+        - ../../auth_db/auth_mysql/master/manifests
+        - ../../auth_db/auth_mysql/slave/manifests
+        - ../../auth_db/auth_redis/manifests
+        - ../manifests
+
+    - name: Wait for instances to start
+      pause:
+        seconds: 30
+
+    - name: Run playbook on Pod
+      command: >
+        minikube kubectl -- exec -it ansible -- /bin/bash -c "apt update && apt install git -y && git clone https://github.com/Auwate/micro_svc_video_converter.git && python3 -m venv venv && source venv/bin/activate && pip install ansible && cd micro_svc_video_converter/ansible && python3 -m ansible playbook playbooks/mysql/playbook.yaml" 
+
+
+    - name: Populate MySQL master with initial data
+      shell: minikube kubectl -- exec -it auth-master-sfs-0 -- mysql -u auth_user -padminpass -e < /etc/setup.sql
+
+    - name: Deploy auth service
+      command: minikube kubectl -- apply -f ../../auth/manifests
+
+    # - name: Deploy API gateway
+    #   shell: kubectl apply -f path/to/api_gateway.yaml
+
+    # - name: Set up ingress
+    #   shell: kubectl apply -f path/to/ingress.yaml
+
+    # - name: Test services
+    #   uri:
+    #     url: http://localhost/api_endpoint
+    #     return_content: yes
+    #   register: response
+
+    # - name: Output test result
+    #   debug:
+    #     msg: "{{ response.content }}"

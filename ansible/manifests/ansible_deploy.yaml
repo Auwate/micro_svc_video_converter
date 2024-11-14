@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ansible
+  labels:
+    app: ansible
+spec:
+  containers:
+    - name: ansible-mysql-container
+      image: python:3.12.7-slim-bookworm
+      command: ["sleep", "infinity"]

@@ -1,0 +1,16 @@
+- name: Set up application infrastructure on Minikube
+  hosts: localhost
+  tasks:
+    - name: Get MySQL master status
+      community.mysql.mysql_query:
+        login_host: master_host
+        query: 'SHOW MASTER STATUS;'
+      register: master_status
+
+    - name: Configure MySQL slave
+      community.mysql.mysql_query:
+        login_host: slave_host
+        query: >
+          CHANGE MASTER TO MASTER_LOG_FILE='{{ master_status.result.0.File }}',
+          MASTER_LOG_POS={{ master_status.result.0.Position }};
+        start_slave: yes

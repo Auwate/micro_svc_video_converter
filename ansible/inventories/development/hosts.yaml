@@ -1,0 +1,13 @@
+all:
+  hosts:
+    auth-master-sfs-0:
+      ansible_user: root
+    auth-slave-sfs-0:
+        ansible_user: root
+  children:
+    master_host:
+      hosts:
+        auth-master-sfs-0
+    slave_host:
+      hosts:
+        auth-slave-sfs-0

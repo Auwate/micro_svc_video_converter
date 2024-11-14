@@ -154,7 +154,7 @@ def mostRecentlyAccessed():
     recentlyAccessedData = redis_db.get("recentlyAccessed")
 
     if recentlyAccessedData:
-        return {"response": recentlyAccessedData}, 200
+        return {"response": json.loads(recentlyAccessedData)}, 200
 
     # Else fill Redis and then return
 
