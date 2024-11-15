@@ -11,14 +11,14 @@
     - name: Apply Kubernetes configurations
       shell: minikube kubectl -- apply -f {{ item }}
       with_items:
-        - ../../auth_db/auth_mysql/master/manifests
-        - ../../auth_db/auth_mysql/slave/manifests
-        - ../../auth_db/auth_redis/manifests
-        - ../manifests
+        - ../../../auth_db/auth_mysql/master/manifests/
+        - ../../../auth_db/auth_mysql/slave/manifests/
+        - ../../../auth_db/auth_redis/manifests/
+        - ../../manifests/
 
     - name: Wait for instances to start
       pause:
-        seconds: 30
+        seconds: 120
 
     - name: Run playbook on Pod
       command: >
