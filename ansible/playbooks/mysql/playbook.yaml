@@ -6,7 +6,6 @@
         login_host: "{{ hostvars['auth-master-sfs-0'].ansible_host }}"
         login_user: "{{ hostvars['auth-master-sfs-0'].mysql_user }}"
         login_password: "{{ hostvars['auth-master-sfs-0'].mysql_password }}"
-        db: "{{ hostvars['auth-master-sfs-0'].db_name }}"
         query: 'SHOW MASTER STATUS;'
       register: master_status
 
@@ -15,7 +14,6 @@
         login_host: "{{ hostvars['auth-slave-sfs-0'].ansible_host }}"
         login_user: "{{ hostvars['auth-slave-sfs-0'].mysql_user }}"
         login_password: "{{ hostvars['auth-slave-sfs-0'].mysql_password }}"
-        db: "{{ hostvars['auth-slave-sfs-0'].db_name }}"
         query: >
           CHANGE MASTER TO MASTER_LOG_FILE='{{ master_status.result[0].File }}',
           MASTER_LOG_POS={{ master_status.result[0].Position }};
@@ -26,6 +24,5 @@
         login_host: "{{ hostvars['auth-master-sfs-0'].ansible_host }}"
         login_user: "{{ hostvars['auth-master-sfs-0'].mysql_user }}"
         login_password: "{{ hostvars['auth-master-sfs-0'].mysql_password }}"
-        db: "{{ hostvars['auth-master-sfs-0'].db_name }}"
         query: "{{ lookup('file', '/etc/setup.sql') }}"
       #shell: minikube kubectl -- exec -it auth-master-sfs-0 -- mysql -u auth_user -padminpass -e < /etc/setup.sql
