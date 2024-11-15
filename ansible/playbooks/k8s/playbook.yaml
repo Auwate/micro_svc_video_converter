@@ -22,11 +22,7 @@
 
     - name: Run playbook on Pod
       command: >
-        minikube kubectl -- exec -it ansible -- /bin/bash -c "apt update && apt install git -y && git clone https://github.com/Auwate/micro_svc_video_converter.git && python3 -m venv venv && source venv/bin/activate && pip install ansible && cd micro_svc_video_converter/ansible && python3 -m ansible playbook playbooks/mysql/playbook.yaml" 
-
-
-    - name: Populate MySQL master with initial data
-      shell: minikube kubectl -- exec -it auth-master-sfs-0 -- mysql -u auth_user -padminpass -e < /etc/setup.sql
+        minikube kubectl -- exec -it ansible -- /bin/bash -c "apt update && apt install git -y && git clone https://github.com/Auwate/micro_svc_video_converter.git && python3 -m venv venv && source venv/bin/activate && pip install ansible && pip install PyMySQL && cd micro_svc_video_converter/ansible && python3 -m ansible playbook playbooks/mysql/playbook.yaml" 
 
     - name: Deploy auth service
       command: minikube kubectl -- apply -f ../../auth/manifests

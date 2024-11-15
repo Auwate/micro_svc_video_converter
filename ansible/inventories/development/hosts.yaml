@@ -2,8 +2,16 @@ all:
   hosts:
     auth-master-sfs-0:
       ansible_user: root
+      mysql_user: auth_user
+      mysql_password: Aauth123
+      ansible_host: auth-master-sfs-0
+      db_name: authdb
     auth-slave-sfs-0:
-        ansible_user: root
+      ansible_user: root
+      mysql_user: auth_user
+      mysql_password: Aauth123
+      ansible_host: auth-slave-sfs-0
+      db_name: authdb
   children:
     master_host:
       hosts:
